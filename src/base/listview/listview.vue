@@ -32,7 +32,7 @@
   const ANCHOR_HEIGHT = 18
 
   export default {
-    data() {
+    data () {
       return {}
     },
     props: {
@@ -47,17 +47,17 @@
     },
     watch: {},
     computed: {
-      shortcutList() {
+      shortcutList () {
         return this.data.map((item, index) => {
           return item.title.substr(0, 1)
         })
       }
     },
-    created() {
+    created () {
       this.touch = {}
     },
     methods: {
-      onShortcutTouchStart(evt) {
+      onShortcutTouchStart (evt) {
         let anchorIndex = getData(evt.target, 'index')
         let firstTouch = evt.touches[0]
         console.log(firstTouch)
@@ -65,14 +65,14 @@
         this.touch.anchorIndex = anchorIndex
         this.scrollTo(anchorIndex)
       },
-      onShortcutTouchMove(evt) {
+      onShortcutTouchMove (evt) {
         let firstTouch = evt.touches[0]
         this.touch.y2 = firstTouch.pageY
         let delta = (this.touch.y2 - this.touch.y1) / ANCHOR_HEIGHT | 0
         let anchorIndex = parseInt(this.touch.anchorIndex) + delta
         this.scrollTo(anchorIndex)
       },
-      scrollTo(index) {
+      scrollTo (index) {
         this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
       }
     }
