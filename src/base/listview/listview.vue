@@ -1,5 +1,11 @@
 <template>
-  <scroll :data="data" class="listview" ref="listview" :listenScroll="listenScroll" @scroll="scroll">
+  <scroll
+    :data="data"
+    class="listview"
+    ref="listview"
+    :listenScroll="listenScroll"
+    @scroll="scroll"
+    :probeType="probeType">
     <ul>
       <li :key="index" class="list-group" v-for="(group, index) in data" ref="listGroup">
         <h2 class="list-group-title">{{group.title}}</h2>
@@ -16,9 +22,10 @@
         <li @touchstart="onShortcutTouchStart"
             @touchmove.stop.prevent="onShortcutTouchMove"
             class="item"
-            v-for="(item, index) in shortcutList"
+            v-for="(item,index) in shortcutList"
             :key="index"
-            :data-index="index">
+            :data-index="index"
+            :class="{current: currentIndex === index}">
           {{item}}
         </li>
       </ul>
@@ -57,17 +64,28 @@
           this.calculateHeight()
         }, 20)
       },
-      scrollY (newY) {
+      // watch函数的参数中，第一个是改变之前的值，第二个是改变之后的值。
+      // 等价于 scrollY:function(){}
+      scrollY (newY, oldY) {
         const listHeight = this.listHeight
-        for (let i = 0; i < listHeight.length; i++) {
+        // 当滚动到顶部，newY大于0
+        if (newY > 0) {
+          this.currentIndex = 0
+          return
+        }
+        // 中间
+        for (let i = 0; i < listHeight.length - 1; i++) {
+          // 长度23
           let height1 = listHeight[i]
           let height2 = listHeight[i + 1]
-          if (!height2 || (-newY > height1 && -newY < height2)) {
+          if (-newY >= height1 && -newY < height2) {
             this.currentIndex = i
+            console.log(this.currentIndex)
             return
           }
-          this.currentIndex = 0
         }
+        // 底部 -newY大于最后一个元素上限
+        this.currentIndex = listHeight.length - 2
       }
     },
     computed: {
@@ -81,12 +99,12 @@
       this.touch = {}
       this.listenScroll = true
       this.listHeight = []
+      this.probeType = 3
     },
     methods: {
       onShortcutTouchStart (evt) {
         let anchorIndex = getData(evt.target, 'index')
         let firstTouch = evt.touches[0]
-        console.log(firstTouch)
         this.touch.y1 = firstTouch.pageY
         this.touch.anchorIndex = anchorIndex
         this.scrollTo(anchorIndex)
@@ -106,7 +124,7 @@
       },
       calculateHeight () {
         this.listHeight = []
-        const list = this.$refs.listGroup
+        const list = this.$refs.listGroup // 每个字母下所有的歌手
         let height = 0
         this.listHeight.push(height)
         for (let i = 0; i < list.length; i++) {
