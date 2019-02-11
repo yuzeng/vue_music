@@ -30,6 +30,12 @@
         </li>
       </ul>
     </div>
+    <div class="list-fixed" v-if="fixedTitle" ref="fixed">
+      <h1 class="fixed-title">{{fixedTitle}}</h1>
+    </div>
+    <div v-show="!data.length" class="loading-container">
+      <Loading></Loading>
+    </div>
   </scroll>
 </template>
 
@@ -38,14 +44,15 @@
   import Loading from 'base/loading/loading'
   import {getData} from 'common/js/dom'
 
-  // const TITLE_HEIGHT = 30
+  const TITLE_HEIGHT = 30
   const ANCHOR_HEIGHT = 18
 
   export default {
     data () {
       return {
         scrollY: -1,
-        currentIndex: 0
+        currentIndex: 0,
+        diff: -1
       }
     },
     props: {
@@ -75,17 +82,29 @@
         }
         // 中间
         for (let i = 0; i < listHeight.length - 1; i++) {
-          // 长度23
+          // listHeight长度24 下标（0~23）（右侧字母）到23
           let height1 = listHeight[i]
           let height2 = listHeight[i + 1]
           if (-newY >= height1 && -newY < height2) {
             this.currentIndex = i
-            console.log(this.currentIndex)
+            // - -newY
+            // diff 是下一级的最低点减去已滚动的长度
+            this.diff = height2 - (-newY)
+            // console.log(`height1:${height1}, height2:${height2}, newY:${newY}, diff${this.diff}`)
             return
           }
         }
         // 底部 -newY大于最后一个元素上限
         this.currentIndex = listHeight.length - 2
+      },
+      diff (newVal) {
+        // 如果diff这个长度，已经小于30了，即小于标题的高度了，说明已经滚动到了标题处，需要开始做处理了。
+        let fixedTop = (newVal > 0 && newVal < TITLE_HEIGHT) ? newVal - TITLE_HEIGHT : 0
+        if (this.fixedTop === fixedTop) {
+          return
+        }
+        this.fixedTop = fixedTop
+        this.$refs.fixed.style.transform = `translate3d(0, ${fixedTop}px, 0)`
       }
     },
     computed: {
@@ -93,6 +112,12 @@
         return this.data.map((item, index) => {
           return item.title.substr(0, 1)
         })
+      },
+      fixedTitle () {
+        if (this.scrollY > 0) {
+          return ''
+        }
+        return this.data[this.currentIndex] ? this.data[this.currentIndex].title : ''
       }
     },
     created () {
@@ -112,11 +137,22 @@
       onShortcutTouchMove (evt) {
         let firstTouch = evt.touches[0]
         this.touch.y2 = firstTouch.pageY
+        // | 向下取整
         let delta = (this.touch.y2 - this.touch.y1) / ANCHOR_HEIGHT | 0
         let anchorIndex = parseInt(this.touch.anchorIndex) + delta
         this.scrollTo(anchorIndex)
       },
       scrollTo (index) {
+        if (index < 0) {
+          index = 0
+        } else if (index > this.listHeight.length - 2) {
+          index = this.listHeight.length - 2
+        }
+        if (!index && index !== 0) {
+          return
+        }
+        this.scrollY = -this.listHeight[index]
+        // scrollToElement better-scroll 的方法
         this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0)
       },
       scroll (pos) {
