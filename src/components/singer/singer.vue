@@ -6,10 +6,11 @@
 </template>
 
 <script type="text/ecmascript-6">
-  import {getSingerList, getSingerDetail} from 'api/singer'
+  import {getSingerList} from 'api/singer'
   import {ERR_OK} from 'api/config'
   import Singer from 'common/js/singer'
   import ListView from 'base/listview/listview'
+  import {mapMutations} from 'vuex'
 
   const HOT_NAME = '热门'
   const HOT_SINGER_LEN = 10
@@ -24,13 +25,14 @@
     },
     created () {
       this._getSingerList()
-      // this._getSingerDetail()
     },
     methods: {
       selectSinger (singer) {
         this.$router.push({
           path: `singer/${singer.id}`
         })
+        // 提交一个mutation 相当于执行mutations.js里的函数
+        this.setSinger(singer)
       },
       _getSingerList () {
         getSingerList().then(res => {
@@ -39,17 +41,6 @@
             this.singers = this._normalizeSinger(this.singers)
           }
         })
-      },
-      _getSingerDetail () {
-        getSingerDetail()
-          .then(res => {
-            if (res.code === ERR_OK) {
-              console.log(res)
-            }
-          })
-          .catch(err => {
-            console.log(err)
-          })
       },
       _normalizeSinger (list) {
         let map = {
@@ -95,7 +86,11 @@
           return a.title.charCodeAt(0) - b.title.charCodeAt(0)
         })
         return hot.concat(ret)
-      }
+      },
+      ...mapMutations({
+        // 对应mutation-types里的常量，映射成一个方法名（setSinger）
+        setSinger: 'SET_SINGER'
+      })
     }
   }
 </script>

@@ -7,8 +7,39 @@
 </template>
 
 <script type="text/ecmascript-6">
+  // 取mutation后的数据
+  import {mapGetters} from 'vuex'
+  import {getSingerDetail} from 'api/singer'
+  import {ERR_OK} from 'api/config'
+
   export default {
-    name: 'singer-detail'
+    created () {
+      this._getSingerDetail()
+    },
+    computed: {
+      ...mapGetters([
+        // 对应getters.js里的 做完后相当于state里的多了一个名为singer的属性
+        'singer'
+      ])
+    },
+    methods: {
+      _getSingerDetail() {
+        if (!this.singer.id) {
+          this.$router.push({
+            path: `/singer`
+          })
+        }
+        getSingerDetail(this.singer.id)
+          .then(res => {
+            if (res.code === ERR_OK) {
+              console.log(res)
+            }
+          })
+          .catch(err => {
+            console.log(err)
+          })
+      }
+    }
   }
 </script>
 
