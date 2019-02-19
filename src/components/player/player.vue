@@ -22,18 +22,25 @@
           </div>
         </div>
         <div class="bottom">
+          <div class="progress-wrapper">
+            <span class="time time-l" v-html="formatTime(currentTime)"></span>
+            <div class="progress-bar-wrapper">
+              <progress-bar :percent="percent" @percentChange="onProgressBarChange"></progress-bar>
+            </div>
+            <span class="time time-r" v-html="formatTime(currentSong.duration - currentTime)"></span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
               <i class="icon-sequence"></i>
             </div>
-            <div class="icon i-left">
-              <i class="icon-prev"></i>
+            <div class="icon i-left" :class="disableCls">
+              <i @click="prev" class="icon-prev"></i>
             </div>
             <div class="icon i-center">
               <i @click="togglePlaying" :class="playIcon"></i>
             </div>
-            <div class="icon i-right">
-              <i class="icon-next"></i>
+            <div class="icon i-right" :class="disableCls">
+              <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
               <i class="icon-not-favorite"></i>
@@ -52,14 +59,16 @@
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
-          <i :class="miniIcon" @click.stop="togglePlaying"></i>
+          <progress-circle>
+            <i class="icon-mini" :class="miniIcon" @click.stop="togglePlaying"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
-    <audio ref="audio" :src="currentSong.url"></audio>
+    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="updateTime"></audio>
   </div>
 </template>
 
@@ -67,10 +76,22 @@
   import {mapGetters, mapMutations} from 'vuex'
   import animations from 'create-keyframe-animation'
   import {prefixStyle} from 'common/js/dom'
+  import ProgressBar from 'base/progress-bar/progress-bar'
+  import ProgressCircle from 'base/progress-circle/progress-circle'
 
   const transform = prefixStyle('transform')
 
   export default {
+    components: {
+      ProgressBar,
+      ProgressCircle
+    },
+    data () {
+      return {
+        songReady: false,
+        currentTime: 0
+      }
+    },
     watch: {
       currentSong () {
         this.$nextTick(() => {
@@ -91,20 +112,91 @@
       miniIcon () {
         return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
       },
-      cdCls() {
+      cdCls () {
         return this.playing ? 'play' : 'play pause'
+      },
+      disableCls () {
+        return this.songReady ? '' : 'disable'
+      },
+      percent () {
+        return this.currentTime / this.currentSong.duration
       },
       ...mapGetters([
         'fullScreen',
         'playlist',
         'currentSong',
-        'playing'
+        'playing',
+        'currentIndex'
       ])
     },
     methods: {
+      onProgressBarChange (percent) {
+        this.$refs.audio.currentTime = this.currentSong.duration * percent
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+      },
+      ready () {
+        this.songReady = true
+      },
+      error () {
+        this.songReady = true
+      },
       // 播放 暂停
       togglePlaying () {
+        if (!this.songReady) {
+          return
+        }
         this.setPlayingState(!this.playing)
+      },
+      // 下一首
+      next () {
+        if (!this.songReady) {
+          return
+        }
+        let index = this.currentIndex + 1
+        if (index === this.playlist.length) {
+          index = 0
+        }
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+        this.songReady = false
+      },
+      // 上一首
+      prev () {
+        if (!this.songReady) {
+          return
+        }
+        let index = this.currentIndex - 1
+        if (index === -1) {
+          index = this.playlist.length - 1
+        }
+        this.setCurrentIndex(index)
+        if (!this.playing) {
+          this.togglePlaying()
+        }
+        this.songReady = false
+      },
+      // 播放
+      updateTime (evt) {
+        this.currentTime = evt.target.currentTime
+      },
+      formatTime (time) {
+        time = time | 0 // 向下取整
+        const min = time / 60 | 0 // 获取分
+        const sec = this._pad(time % 60) // 获取秒
+        return `${min}:${sec}`
+      },
+      // 补0
+      _pad (num, n = 2) {
+        let len = num.toString().length
+        while (len < n) {
+          num = `0${num}`
+          len++
+        }
+        return num
       },
       // 最小化播放器
       back () {
@@ -167,7 +259,8 @@
       // 把要改变的属性mapMutations进来，前面是自定义方法名，后面对应mutation-types里定义的常量
       ...mapMutations({
         setFullScreen: 'SET_FULL_SCREEN',
-        setPlayingState: 'SET_PLAYING_STATE'
+        setPlayingState: 'SET_PLAYING_STATE',
+        setCurrentIndex: 'SET_CURRENT_INDEX'
       })
     }
   }
