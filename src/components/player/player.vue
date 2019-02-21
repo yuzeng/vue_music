@@ -20,6 +20,14 @@
               </div>
             </div>
           </div>
+          <scroll v-if="currentLyric" class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+            <div class="lyric-wrapper">
+              <div v-if="currentLyric">
+                <p ref="lyricLine" class="text" :class="{'current': currentLineNum === index}"
+                   v-for="(line, index) in currentLyric.lines" :key="index">{{line.txt}}</p>
+              </div>
+            </div>
+          </scroll>
         </div>
         <div class="bottom">
           <div class="progress-wrapper">
@@ -82,26 +90,33 @@
   import {playMode} from 'common/js/config'
   import {shuffle} from 'common/js/util'
   import Lyric from 'lyric-parser'
+  import Scroll from 'base/scroll/scroll'
 
   const transform = prefixStyle('transform')
 
   export default {
     components: {
       ProgressBar,
-      ProgressCircle
+      ProgressCircle,
+      Scroll
     },
     data () {
       return {
         songReady: false,
         currentTime: 0,
         radius: 32,
-        currentLyric: ''
+        currentLyric: '',
+        currentLineNum: 0
       }
     },
     watch: {
       currentSong (newSong, oldSong) {
         if (newSong.id === oldSong.id) {
           return
+        }
+        // 切换歌曲时，清空lyric-parser对象
+        if (this.currentLyric) {
+          this.currentLyric.stop()
         }
         this.$nextTick(() => {
           this.$refs.audio.play()
@@ -149,9 +164,22 @@
       getLyric () {
         this.currentSong.getLyric().then((lyric) => {
           // 使用lyric-parser插件
-          this.currentLyric = new Lyric(lyric)
+          this.currentLyric = new Lyric(lyric, this.handleLyric)
           console.log(this.currentLyric)
+          if (this.playing) {
+            this.currentLyric.play()
+          }
         })
+      },
+      // 传入插件的回调
+      handleLyric ({lineNum, txt}) {
+        this.currentLineNum = lineNum
+        if (lineNum > 5) {
+          let lineEl = this.$refs.lyricLine[lineNum - 5]
+          this.$refs.lyricList.scrollToElement(lineEl, 1000)
+        } else {
+          this.$refs.lyricList.scrollTo(0, 0, 1000)
+        }
       },
       // 当前歌曲播放完毕
       end () {
@@ -164,6 +192,10 @@
       loop () {
         this.$refs.audio.currentTime = 0
         this.$refs.audio.play()
+        // 重置歌词
+        if (this.currentLyric) {
+          this.currentLyric.seek(0)
+        }
       },
       // 切换播放模式
       changeMode () {
@@ -187,8 +219,14 @@
       // 点击或拖放播放进度条，progress-bar子组件传来
       onProgressBarChange (percent) {
         this.$refs.audio.currentTime = this.currentSong.duration * percent
+        // 拖动后 设置歌曲播放
         if (!this.playing) {
           this.togglePlaying()
+        }
+        // 拖动后 设置歌词位置
+        if (this.currentLyric) {
+          console.log(this.$refs.audio.currentTime * 1000)
+          this.currentLyric.seek(this.$refs.audio.currentTime * 1000)
         }
       },
       ready () {
@@ -203,6 +241,10 @@
           return
         }
         this.setPlayingState(!this.playing)
+        // 设置歌词继续 暂停
+        if (this.currentLyric) {
+          this.currentLyric.togglePlay()
+        }
       },
       // 下一首
       next () {
