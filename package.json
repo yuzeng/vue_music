@@ -17,6 +17,8 @@
     "vuex": "^2.3.1",
     "fastclick": "^1.0.6",
     "jsonp": "0.2.1",
+    "js-base64": "^2.5.1",
+    "lyric-parser": "^1.0.1",
     "better-scroll": "^0.1.15",
     "axios": "^0.16.1",
     "vue-lazyload": "^1.0.3",
