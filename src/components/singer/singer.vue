@@ -1,6 +1,6 @@
 <template>
-  <div class="singer">
-    <list-view :data="singers" @select="selectSinger"></list-view>
+  <div class="singer" ref="singer">
+    <list-view :data="singers" @select="selectSinger" ref="singerList"></list-view>
     <router-view></router-view>
   </div>
 </template>
@@ -11,6 +11,7 @@
   import Singer from 'common/js/singer'
   import ListView from 'base/listview/listview'
   import {mapMutations} from 'vuex'
+  import {playlistMixin} from 'common/js/mixin'
 
   const HOT_NAME = '热门'
   const HOT_SINGER_LEN = 10
@@ -23,6 +24,9 @@
     components: {
       ListView
     },
+    mixins: [
+      playlistMixin
+    ],
     created () {
       this._getSingerList()
     },
@@ -86,6 +90,13 @@
           return a.title.charCodeAt(0) - b.title.charCodeAt(0)
         })
         return hot.concat(ret)
+      },
+      // 覆盖mixins里的函数
+      handlePlaylist (playlist) {
+        const bottom = playlist.length > 0 ? '60px' : ''
+        this.$refs.singer.style.bottom = bottom
+        // 调用listview里的refresh方法
+        this.$refs.singerList.refresh()
       },
       ...mapMutations({
         // 对应mutation-types里的常量，映射成一个方法名（setSinger）

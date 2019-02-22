@@ -12,15 +12,21 @@
           <h1 class="title" v-html="currentSong.name"></h1>
           <h2 class="subtitle" v-html="currentSong.singer"></h2>
         </div>
-        <div class="middle">
-          <div class="middle-l">
+        <div class="middle"
+             @touchstart.prevent="middleTouchStart"
+             @touchmove.prevent="middleTouchMove"
+             @touchend.prevent="middleTouchEnd">
+          <div class="middle-l" ref="middleL">
             <div class="cd-wrapper" ref="cdWrapper">
               <div class="cd" :class="cdCls">
                 <img class="image" :src="currentSong.image">
               </div>
             </div>
+            <div class="playing-lyric-wrapper">
+              <div class="playing-lyric">{{playingLyric}}</div>
+            </div>
           </div>
-          <scroll v-if="currentLyric" class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
+          <scroll class="middle-r" ref="lyricList" :data="currentLyric && currentLyric.lines">
             <div class="lyric-wrapper">
               <div v-if="currentLyric">
                 <p ref="lyricLine" class="text" :class="{'current': currentLineNum === index}"
@@ -30,6 +36,10 @@
           </scroll>
         </div>
         <div class="bottom">
+          <div class="dot-wrapper">
+            <span class="dot" :class="{'active': currentShow === 'cd'}"></span>
+            <span class="dot" :class="{'active': currentShow === 'lyric'}"></span>
+          </div>
           <div class="progress-wrapper">
             <span class="time time-l" v-html="formatTime(currentTime)"></span>
             <div class="progress-bar-wrapper">
@@ -93,6 +103,7 @@
   import Scroll from 'base/scroll/scroll'
 
   const transform = prefixStyle('transform')
+  const transitionDuration = prefixStyle('transitionDuration')
 
   export default {
     components: {
@@ -105,8 +116,10 @@
         songReady: false,
         currentTime: 0,
         radius: 32,
-        currentLyric: '',
-        currentLineNum: 0
+        currentLyric: null,
+        currentLineNum: 0,
+        currentShow: 'cd', // 默认显示cd页
+        playingLyric: '' // 当前显示歌词
       }
     },
     watch: {
@@ -118,10 +131,11 @@
         if (this.currentLyric) {
           this.currentLyric.stop()
         }
-        this.$nextTick(() => {
+        // 解决手机微信浏览器 后台切前台无法执行JS，$nextTick换车setTimeou
+        setTimeout(() => {
           this.$refs.audio.play()
           this.getLyric()
-        })
+        }, 1000)
       },
       playing (playing) {
         const audio = this.$refs.audio
@@ -159,6 +173,9 @@
         'sequenceList'
       ])
     },
+    created () {
+      this.touch = {}
+    },
     methods: {
       // 获取歌词
       getLyric () {
@@ -169,6 +186,11 @@
           if (this.playing) {
             this.currentLyric.play()
           }
+        }).catch((err) => {
+          console.log(err)
+          this.currentLyric = null
+          this.playingLyric = ''
+          this.currentLineNum = 0
         })
       },
       // 传入插件的回调
@@ -180,6 +202,7 @@
         } else {
           this.$refs.lyricList.scrollTo(0, 0, 1000)
         }
+        this.playingLyric = txt
       },
       // 当前歌曲播放完毕
       end () {
@@ -251,13 +274,17 @@
         if (!this.songReady) {
           return
         }
-        let index = this.currentIndex + 1
-        if (index === this.playlist.length) {
-          index = 0
-        }
-        this.setCurrentIndex(index)
-        if (!this.playing) {
-          this.togglePlaying()
+        if (this.playlist.length === 1) {
+          this.loop()
+        } else {
+          let index = this.currentIndex + 1
+          if (index === this.playlist.length) {
+            index = 0
+          }
+          this.setCurrentIndex(index)
+          if (!this.playing) {
+            this.togglePlaying()
+          }
         }
         this.songReady = false
       },
@@ -266,13 +293,17 @@
         if (!this.songReady) {
           return
         }
-        let index = this.currentIndex - 1
-        if (index === -1) {
-          index = this.playlist.length - 1
-        }
-        this.setCurrentIndex(index)
-        if (!this.playing) {
-          this.togglePlaying()
+        if (this.playlist.length === 1) {
+          this.loop()
+        } else {
+          let index = this.currentIndex - 1
+          if (index === -1) {
+            index = this.playlist.length - 1
+          }
+          this.setCurrentIndex(index)
+          if (!this.playing) {
+            this.togglePlaying()
+          }
         }
         this.songReady = false
       },
@@ -352,6 +383,66 @@
         const x = -(window.innerWidth / 2 - paddingLeft)
         const y = window.innerHeight - paddingTop - width / 2 - paddingBottom
         return {x, y, scale}
+      },
+      // 切换cd和歌词的三个事件
+      middleTouchStart (evt) {
+        this.touch.initiated = true
+        const touch = evt.touches[0]
+        this.touch.startX = touch.pageX
+        this.touch.startY = touch.pageY
+      },
+      middleTouchMove (evt) {
+        if (!this.touch.initiated) {
+          return
+        }
+        const touch = evt.touches[0]
+        const deltaX = touch.pageX - this.touch.startX
+        const deltaY = touch.pageY - this.touch.startY
+        // 如果纵轴移动大于横轴移动 就什么都不做 因为这个时候可能在拖动歌词
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+          return
+        }
+        /* 歌词相对于屏幕最右侧的横向滚动距离
+        **页面显示为cd时是0，否则是整个屏幕的宽度（已经全部显示在页面上）
+        */
+        const left = this.currentShow === 'cd' ? 0 : -window.innerWidth
+        // 歌词组件横向滑动的距离
+        const offsetWidth = Math.min(Math.max(-window.innerWidth, left + deltaX), 0)
+        // 滑动距离和屏幕宽度的比例
+        this.touch.percent = Math.abs(offsetWidth / window.innerWidth)
+        this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px, 0, 0)`
+        this.$refs.lyricList.$el.style[transitionDuration] = `0ms`
+        this.$refs.middleL.style.opacity = 1 - this.touch.percent
+        this.$refs.middleL.style[transitionDuration] = `0ms`
+      },
+      middleTouchEnd () {
+        let offsetWidth
+        let opacity
+        if (this.currentShow === 'cd') {
+          // 如果比例大于10%
+          if (this.touch.percent > 0.1) {
+            offsetWidth = -window.innerWidth
+            this.currentShow = 'lyric'
+            opacity = 0
+          } else {
+            opacity = 1
+            offsetWidth = 0
+          }
+        } else {
+          if (this.touch.percent < 0.9) {
+            offsetWidth = 0
+            this.currentShow = 'cd'
+            opacity = 1
+          } else {
+            offsetWidth = -window.innerWidth
+            opacity = 0
+          }
+        }
+        const time = 300
+        this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px, 0, 0)`
+        this.$refs.lyricList.$el.style[transitionDuration] = `${time}ms`
+        this.$refs.middleL.style[transitionDuration] = `${time}ms`
+        this.$refs.middleL.style.opacity = opacity
       },
       // 把要改变的属性mapMutations进来，前面是自定义方法名，后面对应mutation-types里定义的常量
       ...mapMutations({

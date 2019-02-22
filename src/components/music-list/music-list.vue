@@ -31,6 +31,7 @@
   import {prefixStyle} from 'common/js/dom'
   import Loading from 'base/loading/loading'
   import {mapActions} from 'vuex'
+  import {playlistMixin} from 'common/js/mixin'
 
   const RESERVED_HEIGHT = 40
   const transform = prefixStyle('transform')
@@ -61,6 +62,9 @@
         default: ''
       }
     },
+    mixins: [
+      playlistMixin
+    ],
     computed: {
       bgStyle () {
         return `background-image:url(${this.bgImage})`
@@ -128,6 +132,12 @@
         this.randomPlay({
           list: temp
         })
+      },
+      // 覆盖mixins里的函数
+      handlePlaylist (playlist) {
+        const bottom = playlist.length > 0 ? '60px' : ''
+        this.$refs.list.$el.style.bottom = bottom
+        this.$refs.list.refresh()
       },
       ...mapActions([
         'selectPlay',

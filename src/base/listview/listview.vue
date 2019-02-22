@@ -127,6 +127,10 @@
       this.probeType = 3
     },
     methods: {
+      // 向外暴露这个方法
+      refresh () {
+        this.$refs.listview.refresh()
+      },
       selectItem (item) {
         this.$emit('select', item)
       },
