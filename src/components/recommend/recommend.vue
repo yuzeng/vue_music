@@ -6,7 +6,8 @@
           <slider>
             <slot>
               <div :key="index" v-for="(item, index) in recommends">
-                <a :href="item.linkUrl">
+                <!--<a :href="item.linkUrl">-->
+                <a href="javascript:;">
                   <img class="needsclick" :src="item.picUrl" v-on:load="loadImage">
                 </a>
               </div>
@@ -16,7 +17,7 @@
         <div class="recommend-list">
           <h1 class="list-title">热门歌单推荐</h1>
           <ul>
-            <li :key="index" class="item" v-for="(item, index) in discList">
+            <li @click="selectItem(item)" :key="index" class="item" v-for="(item, index) in discList">
               <div class="icon">
                 <img height="60" v-lazy="item.imgurl" width="60">
               </div>
@@ -32,6 +33,7 @@
         <loading></loading>
       </div>
     </scroll>
+    <router-view></router-view>
   </div>
 </template>
 
@@ -42,6 +44,7 @@
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
   import {playlistMixin} from 'common/js/mixin'
+  import {mapMutations} from 'vuex'
 
   export default {
     data () {
@@ -64,6 +67,13 @@
       this._getDiscList()
     },
     methods: {
+      // 点击歌单跳往歌单详情
+      selectItem (item) {
+        this.$router.push({
+          path: `/recommend/${item.dissid}`
+        })
+        this.setDisc(item)
+      },
       // 覆盖mixins里的函数
       handlePlaylist (playlist) {
         const bottom = playlist.length > 0 ? '60px' : ''
@@ -90,7 +100,10 @@
           this.$refs.scroll.refresh()
           this.checkLoaded = true
         }
-      }
+      },
+      ...mapMutations({
+        setDisc: 'SET_DISC'
+      })
     }
   }
 </script>
