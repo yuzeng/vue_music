@@ -37,6 +37,10 @@
     },
     methods: {
       _getSongList () {
+        if (!this.disc.dissid) {
+          this.$router.push('/recommend')
+          return
+        }
         getSongList(this.disc.dissid)
           .then((res) => {
             if (res.code === ERR_OK) {
@@ -47,7 +51,7 @@
       _normalizeSongs (list) {
         let ret = []
         list.forEach(item => {
-          let {musicData} = item
+          let musicData = item
           if (musicData.songid && musicData.albummid) {
             // 先做一个getMusic请求，拿到歌曲的vkey，再用creatSong方法生成完整歌曲
             getMusic(musicData.songmid).then(res => {
