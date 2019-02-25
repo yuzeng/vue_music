@@ -2,6 +2,7 @@ import jsonp from '../common/js/jsonp'
 import {commonParams, options} from './config'
 import axios from 'axios'
 
+// 获取首页推荐轮播图数据
 export function getRecommend () {
   const url = 'https://c.y.qq.com/musichall/fcgi-bin/fcg_yqqhomepagerecommend.fcg'
   const data = Object.assign({}, commonParams, {
@@ -12,6 +13,7 @@ export function getRecommend () {
   return jsonp(url, data, options)
 }
 
+// 获取首页歌单列表
 export function getDiscList () {
   const url = '/api/getDiscList'
   const data = Object.assign({}, commonParams, {
@@ -35,7 +37,7 @@ export function getDiscList () {
   })
 }
 
-// 获取歌单列表
+// 获取单个歌单列表
 export function getSongList (disstid) {
   const url = '/api/getSongList'
   // const url = 'https://c.y.qq.com/qzone/fcg-bin/fcg_ucc_getcdinfo_byids_cp.fcg'
