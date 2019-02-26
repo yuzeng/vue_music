@@ -44,7 +44,7 @@ export function creatSong (musicData, songVkey) {
   })
 }
 
-function filterSingers (singers) {
+export function filterSingers (singers) {
   let ret = []
   if (!singers) {
     return ''
