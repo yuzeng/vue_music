@@ -1,5 +1,5 @@
 <template>
-  <div ref="wrapper">
+  <div ref="wrapper" class="Bscroll-wrapper">
     <slot></slot>
   </div>
 </template>
@@ -19,9 +19,14 @@
       },
       data: {
         type: Array,
-        default: ''
+        default: null
       },
       listenScroll: {
+        type: Boolean,
+        default: false
+      },
+      // 是否上拉加载
+      pullup: {
         type: Boolean,
         default: false
       }
@@ -51,6 +56,16 @@
           let that = this
           this.scroll.on('scroll', (pos) => {
             that.$emit('scroll', pos)
+          })
+        }
+        // 监听BScroll的事件
+        if (this.pullup) {
+          // 滚动结束时执行这个事件，只执行一次
+          this.scroll.on('scrollEnd', () => {
+            if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
+              // 通知外部父组件，滚动到底部了。
+              this.$emit('scrollToEnd')
+            }
           })
         }
       },

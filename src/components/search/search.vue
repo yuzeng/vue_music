@@ -1,5 +1,5 @@
 <template>
-  <div class="search">
+  <div class="search" ref="search">
     <div class="search-box-wrapper">
       <search-box ref="searchBox" @query="onQueryChange"></search-box>
     </div>
@@ -16,7 +16,7 @@
       </div>
     </div>
     <div class="search-result" v-show="query">
-      <suggest :query="query"></suggest>
+      <suggest :query="query" ref="suggest"></suggest>
     </div>
   </div>
 </template>
@@ -26,8 +26,10 @@
   import {getHotKey} from 'api/search'
   import {ERR_OK} from 'api/config'
   import Suggest from 'components/suggest/suggest'
+  // import {playlistMixin} from 'common/js/mixin'
 
   export default {
+    // mixins: [playlistMixin],
     components: {
       SearchBox,
       Suggest
@@ -48,6 +50,11 @@
       onQueryChange (query) {
         this.query = query
       },
+      // handlePlaylist (playlist) {
+      //   const bottom = playlist.length ? '60px' : ''
+      //   this.$refs.search.style.bottom = bottom
+      //   this.$refs.suggest.refresh()
+      // },
       _getHotKey () {
         getHotKey().then(res => {
           if (res.code === ERR_OK) {

@@ -1,5 +1,5 @@
 <template>
-  <scroll class="suggest" :data="result">
+  <scroll class="suggest" :data="result" :pullup="pullup" @scrollToEnd="searchMore">
     <ul class="suggest-list">
       <li class="suggest-item" v-for="(item, index) in result" :key="index">
         <div class="icon">
@@ -9,6 +9,7 @@
           <p class="text" v-html="getDisplayName(item)"></p>
         </div>
       </li>
+      <loading v-show="hasMore" title=""></loading>
     </ul>
   </scroll>
 </template>
@@ -19,17 +20,22 @@
   import {creatSong} from 'common/js/song'
   import {getMusic} from 'api/music'
   import Scroll from 'base/scroll/scroll'
+  import Loading from 'base/loading/loading'
 
   const TYPE_SINGER = 'singer'
+  const perpage = 20
 
   export default {
     components: {
-      Scroll
+      Scroll,
+      Loading
     },
     data () {
       return {
         page: 1,
-        result: []
+        result: [],
+        pullup: true,
+        hasMore: true // 是否加载完毕 标志位
       }
     },
     props: {
@@ -48,13 +54,27 @@
       }
     },
     methods: {
-      search () {
-        search(this.query, this.page, this.showSinger).then(res => {
-          // console.log(res.data)
+      searchMore () {
+        if (!this.hasMore) {
+          return
+        }
+        this.page++
+        search(this.query, this.page, this.showSinger, perpage).then(res => {
           if (res.code === ERR_OK) {
-            // this.result = this._genResult(res.data)
+            this._genResult(res.data).then(list => {
+              this.result = this.result.concat(list)
+              this._checkMore(res.data)
+            })
+          }
+        })
+      },
+      search () {
+        this.hasMore = true
+        search(this.query, this.page, this.showSinger, perpage).then(res => {
+          if (res.code === ERR_OK) {
             this._genResult(res.data).then(list => {
               this.result = list
+              this._checkMore(res.data)
             })
           }
         })
@@ -71,6 +91,13 @@
           return item.singername
         } else {
           return `${item.name}-${item.singer}`
+        }
+      },
+      _checkMore (data) {
+        console.log(data)
+        const song = data.song
+        if (!song.list.length || (song.curnum + song.curpage * perpage) > song.totalnum) {
+          this.hasMore = false
         }
       },
       _genResult (data) {
