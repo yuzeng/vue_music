@@ -1,7 +1,7 @@
 <template>
-  <scroll class="suggest" :data="result" :pullup="pullup" @scrollToEnd="searchMore">
+  <scroll ref="suggest" class="suggest" :data="result" :pullup="pullup" @scrollToEnd="searchMore">
     <ul class="suggest-list">
-      <li class="suggest-item" v-for="(item, index) in result" :key="index">
+      <li class="suggest-item" v-for="(item, index) in result" :key="index" @click="selectItem(item)">
         <div class="icon">
           <i :class="getIconCls(item)"></i>
         </div>
@@ -21,6 +21,8 @@
   import {getMusic} from 'api/music'
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
+  import Singer from 'common/js/singer'
+  import {mapMutations} from 'vuex'
 
   const TYPE_SINGER = 'singer'
   const perpage = 20
@@ -54,6 +56,19 @@
       }
     },
     methods: {
+      selectItem (item) {
+        if (item.type === TYPE_SINGER) {
+          const singer = new Singer({
+            id: item.singermid,
+            name: item.singername
+          })
+          this.$router.push({
+            path: `/search/${singer.id}`
+          })
+          this.setSinger(singer)
+        }
+      },
+      // 滚动到底部时执行
       searchMore () {
         if (!this.hasMore) {
           return
@@ -69,11 +84,15 @@
         })
       },
       search () {
+        this.page = 1
         this.hasMore = true
+        // 把scroll滚动到顶部
+        this.$refs.suggest.scrollTo(0, 0)
         search(this.query, this.page, this.showSinger, perpage).then(res => {
           if (res.code === ERR_OK) {
             this._genResult(res.data).then(list => {
               this.result = list
+              // 检查一下是否还有更多数据
               this._checkMore(res.data)
             })
           }
@@ -94,8 +113,8 @@
         }
       },
       _checkMore (data) {
-        console.log(data)
         const song = data.song
+        // 已加载页数乘以每页条数等于现有所有条数，如果加上将要返回的条数，大于总条数，那就认为没有更多了。
         if (!song.list.length || (song.curnum + song.curpage * perpage) > song.totalnum) {
           this.hasMore = false
         }
@@ -126,7 +145,11 @@
           })
         })
         return Promise.all(_list)
-      }
+      },
+      ...mapMutations({
+        // 对应mutation-types里的常量，映射成一个方法名（setSinger）
+        setSinger: 'SET_SINGER'
+      })
     }
   }
 </script>

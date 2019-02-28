@@ -62,6 +62,7 @@
         if (this.pullup) {
           // 滚动结束时执行这个事件，只执行一次
           this.scroll.on('scrollEnd', () => {
+            // 50缓冲区
             if (this.scroll.y <= (this.scroll.maxScrollY + 50)) {
               // 通知外部父组件，滚动到底部了。
               this.$emit('scrollToEnd')
