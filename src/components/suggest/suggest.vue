@@ -22,7 +22,7 @@
   import Scroll from 'base/scroll/scroll'
   import Loading from 'base/loading/loading'
   import Singer from 'common/js/singer'
-  import {mapMutations} from 'vuex'
+  import {mapMutations, mapActions} from 'vuex'
 
   const TYPE_SINGER = 'singer'
   const perpage = 20
@@ -66,6 +66,14 @@
             path: `/search/${singer.id}`
           })
           this.setSinger(singer)
+        } else {
+          /**
+           * Do not mutate vuex store state outside mutation handlers. 会报错，不要修改vue的state，在mutation回调函数外(mutations.js)
+           * 在actions.js里把要修改的地方slice()
+           */
+          this.insertSong({
+            song: item
+          })
         }
       },
       // 滚动到底部时执行
@@ -149,7 +157,10 @@
       ...mapMutations({
         // 对应mutation-types里的常量，映射成一个方法名（setSinger）
         setSinger: 'SET_SINGER'
-      })
+      }),
+      ...mapActions([
+        'insertSong'
+      ])
     }
   }
 </script>
