@@ -1,6 +1,6 @@
 <template>
   <div class="recommend" ref="recommend">
-    <scroll :data="discList" class="recommend-content" ref="scroll">
+    <scroll :data="discList" class="recommend-content" ref="scroll" :pullup='false'>
       <div>
         <div class="slider-wrapper" v-if="recommends.length">
           <slider>
@@ -51,7 +51,8 @@
       return {
         recommends: [],
         discList: [],
-        checkLoaded: false
+        checkLoaded: false,
+        pullup: false
       }
     },
     components: {

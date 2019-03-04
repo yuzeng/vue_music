@@ -88,6 +88,7 @@
             song: item
           })
         }
+        this.$emit('select')
       },
       // 滚动到底部时执行
       searchMore () {

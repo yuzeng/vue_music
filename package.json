@@ -22,7 +22,8 @@
     "better-scroll": "^0.1.15",
     "axios": "^0.16.1",
     "vue-lazyload": "^1.0.3",
-    "create-keyframe-animation": "^0.1.0"
+    "create-keyframe-animation": "^0.1.0",
+    "good-storage": "^1.0.1"
   },
   "devDependencies": {
     "autoprefixer": "^7.1.2",
