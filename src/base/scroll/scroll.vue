@@ -29,6 +29,11 @@
       pullup: {
         type: Boolean,
         default: false
+      },
+      // 滚动前事件，Better scroll 会监听这个事件 为了做滚动时让input失焦，收起键盘
+      beforeScroll: {
+        type: Boolean,
+        default: false
       }
     },
     mounted () {
@@ -67,6 +72,12 @@
               // 通知外部父组件，滚动到底部了。
               this.$emit('scrollToEnd')
             }
+          })
+        }
+        // 监听BScroll的事件
+        if (this.beforeScroll) {
+          this.scroll.on('beforeScrollStart', () => {
+            this.$emit('beforeScroll')
           })
         }
       },

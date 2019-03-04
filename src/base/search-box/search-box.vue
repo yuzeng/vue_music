@@ -1,12 +1,14 @@
 <template>
   <div class="search-box">
     <i class="icon-search"></i>
-    <input class="box" :placeholder="placeholder" v-model="query">
+    <input ref="queryInput" class="box" :placeholder="placeholder" v-model="query">
     <i v-show="query" class="icon-dismiss" @click="clear"></i>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
+  import {debounce} from 'common/js/util'
+
   export default {
     data () {
       return {
@@ -20,9 +22,9 @@
       }
     },
     created () {
-      this.$watch('query', (newQuery) => {
+      this.$watch('query', debounce((newQuery) => {
         this.$emit('query', newQuery)
-      })
+      }, 200))
     },
     methods: {
       clear () {
@@ -30,6 +32,10 @@
       },
       setQuery (query) {
         this.query = query
+      },
+      // 对外input失焦方法
+      blur () {
+        this.$refs.queryInput.blur()
       }
     }
   }
@@ -55,7 +61,8 @@
     .box
       flex 1
       margin 0 5px
-      line-height 18px
+      line-height 40px
+      padding 0 5px
       background $color-highlight-background
       color $color-text
       font-size $font-size-medium

@@ -64,7 +64,6 @@ export default {
 
   methods: {
     _setSliderWidth(isResize) {
-      console.log(this)
       this.children = this.$refs.sliderGroup.children
       let width = 0
       let sliderWidth = this.$refs.slider.clientWidth
@@ -83,7 +82,6 @@ export default {
       this.dots = new Array(this.children.length)
     },
     _initSlider() {
-      console.log(this)
       this.slider = new BScroll(this.$refs.slider, {
         scrollX: true,
         scrollY: false,

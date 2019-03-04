@@ -16,3 +16,20 @@ function getRndomInt (min, max) {
   // Math.random() * (max - min + 1) 取到 max-min中间的一个数，加min,就在max和min之间
   return Math.floor(Math.random() * (max - min + 1) + min)
 }
+
+// 节流海曙
+export function debounce (func, delay) {
+  let timer
+  return function (...args) {
+    if (timer) {
+      clearTimeout(timer)
+    }
+    timer = setTimeout(() => {
+      /**
+       * func绑定到this
+       * 这时候this具备了func的属性和方法。
+       */
+      func.apply(this, args) // 此时args 被... 扩展成为一个数组
+    }, delay)
+  }
+}

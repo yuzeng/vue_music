@@ -1,5 +1,12 @@
 <template>
-  <scroll ref="suggest" class="suggest" :data="result" :pullup="pullup" @scrollToEnd="searchMore">
+  <scroll
+    ref="suggest"
+    class="suggest"
+    :data="result"
+    :pullup="pullup"
+    :beforeScroll="beforeScroll"
+    @scrollToEnd="searchMore"
+    @beforeScroll="listScroll">
     <ul class="suggest-list">
       <li class="suggest-item" v-for="(item, index) in result" :key="index" @click="selectItem(item)">
         <div class="icon">
@@ -11,6 +18,9 @@
       </li>
       <loading v-show="hasMore" title=""></loading>
     </ul>
+    <div class="no-result-wrapper" v-show="!hasMore && !result.length">
+      <no-result title="暂无搜索结果"></no-result>
+    </div>
   </scroll>
 </template>
 
@@ -23,6 +33,7 @@
   import Loading from 'base/loading/loading'
   import Singer from 'common/js/singer'
   import {mapMutations, mapActions} from 'vuex'
+  import NoResult from 'base/no-result/no-result'
 
   const TYPE_SINGER = 'singer'
   const perpage = 20
@@ -30,13 +41,15 @@
   export default {
     components: {
       Scroll,
-      Loading
+      Loading,
+      NoResult
     },
     data () {
       return {
         page: 1,
         result: [],
         pullup: true,
+        beforeScroll: true, // 监听Bscroll开始滚动 滚动时让input失焦
         hasMore: true // 是否加载完毕 标志位
       }
     },
@@ -119,6 +132,10 @@
         } else {
           return `${item.name}-${item.singer}`
         }
+      },
+      // 监听滚动
+      listScroll () {
+        this.$emit('listScroll')
       },
       _checkMore (data) {
         const song = data.song
