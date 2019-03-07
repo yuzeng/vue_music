@@ -18,6 +18,14 @@ function insertArray (arr, val, compare, maxLen) { // (存储的数组，存储�
   }
 }
 
+// 封装删除数组的方法
+function deleteFromArray (arr, compare) {
+  const index = arr.findIndex(compare)
+  if (index > -1) {
+    arr.splice(index, 1)
+  }
+}
+
 /**
  *操作和localStorage相关的一些逻辑
  *保存搜索结果
@@ -26,12 +34,27 @@ export function saveSearch (query) {
   // 第一个参数key 第二个默认值
   let searches = storage.get(SEARCH_KEY, []) // 查看当前存储空间的情况，如果没有，就是一个空数组
   insertArray(searches, query, (item) => {
-    return item === query // searches里面的每一条和query比较
+    return item === query // searches里面的每一条(item)和query比较
   }, SEARCH_MAX_LENGTH)
-  storage.set(SEARCH_KEY, searches)
+  storage.set(SEARCH_KEY, searches) // 设置storage
   return searches
 }
 
 export function loadSearch () {
-  return storage.get(SEARCH_KEY, [])
+  return storage.get(SEARCH_KEY, []) // 取storage
+}
+
+export function deleteSearch (query) {
+  let searches = storage.get(SEARCH_KEY, [])
+  deleteFromArray(searches, item => {
+    return item === query
+  })
+  // 调用deleteFromArray方法后，数组改变，所以要设置缓存
+  storage.set(SEARCH_KEY, searches) // 设置storage
+  return searches
+}
+
+export function clearSearch () {
+  storage.remove(SEARCH_KEY)
+  return []
 }
