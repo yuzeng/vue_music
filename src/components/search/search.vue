@@ -3,30 +3,33 @@
     <div class="search-box-wrapper">
       <search-box ref="searchBox" @query="onQueryChange"></search-box>
     </div>
-    <div class="shortcut-wrapper" v-show="!query">
-      <div class="shortcut">
-        <div class="hot-key">
-          <h1 class="title">热门搜索</h1>
-          <ul>
-            <li v-for="(item, index) in hotKey" :key="index" class="item" @click="addQuery(item.k)">
-              <span>{{item.k}}</span>
-            </li>
-          </ul>
-        </div>
-        <div class="search-history" v-show="searchHistory.length">
-          <h1 class="title">
-            <span class="text">搜索历史</span>
-            <span class="clear" @click="deleteAll">
+    <div ref="shortcutWrapper" class="shortcut-wrapper" v-show="!query">
+      <scroll class="shortcut" :data="shortcut" ref="shortcut">
+        <div>
+          <div class="hot-key">
+            <h1 class="title">热门搜索</h1>
+            <ul>
+              <li v-for="(item, index) in hotKey" :key="index" class="item" @click="addQuery(item.k)">
+                <span>{{item.k}}</span>
+              </li>
+            </ul>
+          </div>
+          <div class="search-history" v-show="searchHistory.length">
+            <h1 class="title">
+              <span class="text">搜索历史</span>
+              <span class="clear" @click="showConfirm">
               <i class="icon-clear"></i>
             </span>
-          </h1>
-          <search-list :searches="searchHistory" @select="addQuery" @delete="deleteOne"></search-list>
+            </h1>
+            <search-list :searches="searchHistory" @select="addQuery" @delete="deleteOne"></search-list>
+          </div>
         </div>
-      </div>
+      </scroll>
     </div>
-    <div class="search-result" v-show="query">
+    <div ref="searchResult" class="search-result" v-show="query">
       <suggest :query="query" ref="suggest" @listScroll="blurInput" @select="saveSearch"></suggest>
     </div>
+    <confirm ref="confirm" text="是否清空历史记录" confirmBtnText="清空" @confirm="deleteAll"></confirm>
     <router-view></router-view>
   </div>
 </template>
@@ -38,14 +41,18 @@
   import Suggest from 'components/suggest/suggest'
   import {mapActions, mapGetters} from 'vuex'
   import SearchList from 'base/search-list/search-list'
-  // import {playlistMixin} from 'common/js/mixin'
+  import Confirm from 'base/confirm/confirm'
+  import Scroll from 'base/scroll/scroll'
+  import {playlistMixin} from 'common/js/mixin'
 
   export default {
-    // mixins: [playlistMixin],
+    mixins: [playlistMixin],
     components: {
       SearchBox,
       Suggest,
-      SearchList
+      SearchList,
+      Confirm,
+      Scroll
     },
     data () {
       return {
@@ -54,9 +61,23 @@
       }
     },
     computed: {
+      shortcut () {
+        // hotKey searchHistory 任一变化，就会重新刷新scroll
+        return this.hotKey.concat(this.searchHistory)
+      },
       ...mapGetters([
         'searchHistory'
       ])
+    },
+    watch: {
+      query (newQuery) {
+        // 如果从suggest列表切到 搜索主页 即query从有到无 手动刷新shortcut
+        if (!newQuery) {
+          setTimeout(() => {
+            this.$refs.shortcut.refresh()
+          }, 20)
+        }
+      }
     },
     created () {
       this._getHotKey()
@@ -68,11 +89,13 @@
       onQueryChange (query) {
         this.query = query
       },
-      // handlePlaylist (playlist) {
-      //   const bottom = playlist.length ? '60px' : ''
-      //   this.$refs.search.style.bottom = bottom
-      //   this.$refs.suggest.refresh()
-      // },
+      handlePlaylist (playlist) {
+        const bottom = playlist.length ? '60px' : ''
+        this.$refs.shortcutWrapper.style.bottom = bottom
+        this.$refs.shortcut.refresh()
+        this.$refs.searchResult.style.bottom = bottom
+        this.$refs.suggest.refresh()
+      },
       blurInput () {
         this.$refs.searchBox.blur()
       },
@@ -82,6 +105,9 @@
       },
       deleteOne (item) {
         this.deleteSearchHistory(item)
+      },
+      showConfirm () {
+        this.$refs.confirm.show()
       },
       deleteAll () {
         this.clearSearchHistory()

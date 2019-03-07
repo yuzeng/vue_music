@@ -69,6 +69,10 @@
       }
     },
     methods: {
+      // 供search.vue使用的重新刷新scroll
+      refresh () {
+        this.$refs.suggest.refresh()
+      },
       selectItem (item) {
         if (item.type === TYPE_SINGER) {
           const singer = new Singer({
