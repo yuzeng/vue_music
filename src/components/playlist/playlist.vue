@@ -12,20 +12,21 @@
             </span>
           </h1>
         </div>
-        <div class="list-content">
+        <Scroll class="list-content" :data="sequenceList" ref="listContent">
           <ul>
-            <li class="item">
-              <i class="current"></i>
-              <span class="text"></span>
+            <li ref="listItem" class="item" v-for="(item, index) in sequenceList" :key="index"
+                @click="selectItem(item, index)">
+              <i class="current" :class="getCurrentIcon(item)"></i>
+              <span class="text">{{item.name}}</span>
               <span class="like">
                 <i class="icon-not-favorite"></i>
               </span>
-              <span class="delete">
+              <span class="delete" @click.stop="deleteOne(item)">
                 <i class="icon-delete"></i>
               </span>
             </li>
           </ul>
-        </div>
+        </Scroll>
         <div class="list-operate">
           <div class="add">
             <i class="icon-add"></i>
@@ -41,19 +42,85 @@
 </template>
 
 <script type="text/ecmascript-6">
+  import {mapGetters, mapMutations, mapActions} from 'vuex'
+  import {playMode} from 'common/js/config'
+  import Scroll from 'base/scroll/scroll'
+
   export default {
+    components: {
+      Scroll
+    },
     data () {
       return {
         showFlag: false
       }
     },
+    computed: {
+      ...mapGetters([
+        'sequenceList',
+        'currentSong',
+        'playlist',
+        'mode'
+      ])
+    },
+    watch: {
+      currentSong (newSong, oldSong) {
+        if (!this.showFlag || newSong.id === oldSong.id) {
+          return
+        }
+        this.scrollToCurrent(newSong)
+      }
+    },
     methods: {
       show () {
         this.showFlag = true
+        // 因为是从display none 切换出来 dom会更新，不重新计算的话，无法滚动
+        setTimeout(() => {
+          this.$refs.listContent.refresh()
+          this.scrollToCurrent(this.currentSong)
+        }, 20)
       },
       hide () {
         this.showFlag = false
-      }
+      },
+      getCurrentIcon (item) {
+        if (this.currentSong.id === item.id) {
+          return 'icon-play'
+        } else {
+          return ''
+        }
+      },
+      // 选择歌曲
+      selectItem (item, index) {
+        if (this.mode === playMode.random) {
+          index = this.playlist.findIndex((song) => {
+            return song.id === item.id
+          })
+        }
+        this.setCurrentIndex(index)
+        this.setPlayingState(true)
+      },
+      // 滚动到播放歌曲
+      scrollToCurrent (current) {
+        const index = this.sequenceList.findIndex((song) => {
+          return current.id === song.id
+        })
+        this.$refs.listContent.scrollToElement(this.$refs.listItem[index], 300)
+      },
+      // 从播放列表删除
+      deleteOne (item) {
+        this.deleteSong(item)
+        if (!this.playlist.length) {
+          this.hide()
+        }
+      },
+      ...mapMutations({
+        setCurrentIndex: 'SET_CURRENT_INDEX',
+        setPlayingState: 'SET_PLAYING_STATE'
+      }),
+      ...mapActions([
+        'deleteSong'
+      ])
     }
   }
 </script>
