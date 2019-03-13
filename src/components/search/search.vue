@@ -39,14 +39,14 @@
   import {getHotKey} from 'api/search'
   import {ERR_OK} from 'api/config'
   import Suggest from 'components/suggest/suggest'
-  import {mapActions, mapGetters} from 'vuex'
+  import {mapActions} from 'vuex'
   import SearchList from 'base/search-list/search-list'
   import Confirm from 'base/confirm/confirm'
   import Scroll from 'base/scroll/scroll'
-  import {playlistMixin} from 'common/js/mixin'
+  import {playlistMixin, searchMixin} from 'common/js/mixin'
 
   export default {
-    mixins: [playlistMixin],
+    mixins: [playlistMixin, searchMixin],
     components: {
       SearchBox,
       Suggest,
@@ -56,18 +56,19 @@
     },
     data () {
       return {
-        hotKey: [],
-        query: ''
+        hotKey: []
+        // query: '' // mixin里做
       }
     },
     computed: {
       shortcut () {
         // hotKey searchHistory 任一变化，就会重新刷新scroll
         return this.hotKey.concat(this.searchHistory)
-      },
-      ...mapGetters([
-        'searchHistory'
-      ])
+      }
+      // mixin 里做
+      // ...mapGetters([
+      //   'searchHistory'
+      // ])
     },
     watch: {
       query (newQuery) {
@@ -83,12 +84,14 @@
       this._getHotKey()
     },
     methods: {
-      addQuery (query) {
-        this.$refs.searchBox.setQuery(query)
-      },
-      onQueryChange (query) {
-        this.query = query
-      },
+      // mixin里做
+      // addQuery (query) {
+      //   this.$refs.searchBox.setQuery(query)
+      // },
+      // mixin里做
+      // onQueryChange (query) {
+      //   this.query = query
+      // },
       handlePlaylist (playlist) {
         const bottom = playlist.length ? '60px' : ''
         this.$refs.shortcutWrapper.style.bottom = bottom
@@ -96,13 +99,14 @@
         this.$refs.searchResult.style.bottom = bottom
         this.$refs.suggest.refresh()
       },
-      blurInput () {
-        this.$refs.searchBox.blur()
-      },
-      // 保存搜索结果
-      saveSearch () {
-        this.saveSearchHistory(this.query)
-      },
+      // mixin里做
+      // blurInput () {
+      //   this.$refs.searchBox.blur()
+      // },
+      // // 保存搜索结果
+      // saveSearch () {
+      //   this.saveSearchHistory(this.query)
+      // },
       deleteOne (item) {
         this.deleteSearchHistory(item)
       },
@@ -119,9 +123,8 @@
           }
         })
       },
+      // mixin里做
       ...mapActions([
-        'saveSearchHistory',
-        'deleteSearchHistory',
         'clearSearchHistory'
       ])
     }

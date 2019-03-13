@@ -1,21 +1,55 @@
 <template>
   <transition name="slide">
-    <div class="add-song">
+    <div class="add-song" v-show="showFlag" @click.stop>
       <div class="header">
         <h1 class="title">添加歌曲到列表</h1>
-        <div class="close">
+        <div class="close" @click="hide">
           <i class="icon-close"></i>
         </div>
       </div>
-      <div class="search-box-wrapper"></div>
-      <div class="shortcut"></div>
-      <div class="search-result"></div>
+      <div class="search-box-wrapper">
+        <search-box placeholder="搜索歌曲" @query="onQueryChange"></search-box>
+      </div>
+      <div class="shortcut" v-show="!query">
+      </div>
+      <div class="search-result" v-show="query">
+        <suggest :query="query" :showSinger="showSinger" @select="selectSuggest" @listScroll="blurInput"></suggest>
+      </div>
     </div>
   </transition>
 </template>
 
 <script type="text/ecmascript-6">
+  import SearchBox from 'base/search-box/search-box'
+  import Suggest from 'components/suggest/suggest'
+  import {searchMixin} from 'common/js/mixin'
 
+  export default {
+    mixins: [searchMixin],
+    components: {
+      SearchBox,
+      Suggest
+    },
+    data () {
+      return {
+        showFlag: false,
+        showSinger: false // 传入suggest组件
+        // query: '' // mixin里做
+      }
+    },
+    methods: {
+      show () {
+        this.showFlag = true
+      },
+      hide () {
+        this.showFlag = false
+      },
+      // 选择搜索出的内容,记录搜索结果
+      selectSuggest () {
+        this.saveSearch() // mixin里的
+      }
+    }
+  }
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
