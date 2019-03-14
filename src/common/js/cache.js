@@ -2,6 +2,8 @@ import storage from 'good-storage'
 
 const SEARCH_KEY = '__search__' // 每一个存储都要定义个一个key
 const SEARCH_MAX_LENGTH = 15
+const PLAY_KEY = '__play__'
+const PLAY_MAX_LENGTH = 200
 
 // 封装插入数组的方法
 function insertArray (arr, val, compare, maxLen) { // (存储的数组，存储的值，比较函数：用来比较插入的值是否存在于当前数组，最大值)
@@ -57,4 +59,19 @@ export function deleteSearch (query) {
 export function clearSearch () {
   storage.remove(SEARCH_KEY)
   return []
+}
+
+// 存储播放历史
+export function savePlay (song) {
+  let songs = storage.get(PLAY_KEY, [])
+  insertArray(songs, song, (item) => {
+    return item.id === song.id
+  }, PLAY_MAX_LENGTH)
+  storage.set(PLAY_KEY, songs)
+  return songs
+}
+
+// 读取播放历史
+export function loadPlay () {
+  return storage.get(PLAY_KEY, [])
 }

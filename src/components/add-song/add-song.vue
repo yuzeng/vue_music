@@ -11,6 +11,14 @@
         <search-box placeholder="搜索歌曲" @query="onQueryChange"></search-box>
       </div>
       <div class="shortcut" v-show="!query">
+        <switches :switches="switches" :currentIndex="currentIndex" @switch="switchItem"></switches>
+        <div class="list-wrapper">
+          <scroll class="list-scroll" v-if="currentIndex === 0" :data="playHistory">
+            <div class="list-inner">
+              <song-list :songs="playHistory" @select="selectSong"></song-list>
+            </div>
+          </scroll>
+        </div>
       </div>
       <div class="search-result" v-show="query">
         <suggest :query="query" :showSinger="showSinger" @select="selectSuggest" @listScroll="blurInput"></suggest>
@@ -23,19 +31,34 @@
   import SearchBox from 'base/search-box/search-box'
   import Suggest from 'components/suggest/suggest'
   import {searchMixin} from 'common/js/mixin'
+  import Switches from 'base/switches/switches'
+  import Scroll from 'base/scroll/scroll'
+  import {mapGetters, mapActions} from 'vuex'
+  import SongList from 'base/song-list/song-list'
+  import Song from 'common/js/song'
 
   export default {
     mixins: [searchMixin],
     components: {
       SearchBox,
-      Suggest
+      Suggest,
+      Switches,
+      Scroll,
+      SongList
     },
     data () {
       return {
         showFlag: false,
-        showSinger: false // 传入suggest组件
+        showSinger: false, // 传入suggest组件
         // query: '' // mixin里做
+        currentIndex: 0, // 传入switches
+        switches: [{name: '最近播放'}, {name: '搜索历史'}]
       }
+    },
+    computed: {
+      ...mapGetters([
+        'playHistory'
+      ])
     },
     methods: {
       show () {
@@ -47,7 +70,21 @@
       // 选择搜索出的内容,记录搜索结果
       selectSuggest () {
         this.saveSearch() // mixin里的
-      }
+      },
+      // switches组件传来的方法
+      switchItem (index) {
+        this.currentIndex = index
+      },
+      // song-list组件传来的方法
+      selectSong (song, index) {
+        let _song = new Song(song)
+        if (index !== 0) {
+          this.insertSong({song: _song})
+        }
+      },
+      ...mapActions([
+        'insertSong'
+      ])
     }
   }
 </script>
