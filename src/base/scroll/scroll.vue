@@ -9,6 +9,10 @@
 
   export default {
     props: {
+      refreshDelay: {
+        type: Number,
+        default: 20
+      },
       probeType: {
         type: Number,
         default: 1
@@ -45,7 +49,7 @@
       data: function () {
         setTimeout(() => {
           this.refresh()
-        }, 20)
+        }, this.refreshDelay)
       }
     },
     methods: {

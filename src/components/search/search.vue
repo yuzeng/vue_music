@@ -21,7 +21,7 @@
               <i class="icon-clear"></i>
             </span>
             </h1>
-            <search-list :searches="searchHistory" @select="addQuery" @delete="deleteOne"></search-list>
+            <search-list :searches="searchHistory" @select="addQuery" @delete="deleteOne" :refreshDelay="refreshDelay"></search-list>
           </div>
         </div>
       </scroll>
