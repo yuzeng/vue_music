@@ -8,14 +8,19 @@
         </div>
       </div>
       <div class="search-box-wrapper">
-        <search-box placeholder="搜索歌曲" @query="onQueryChange"></search-box>
+        <search-box ref="searchBox" placeholder="搜索歌曲" @query="onQueryChange"></search-box>
       </div>
       <div class="shortcut" v-show="!query">
         <switches :switches="switches" :currentIndex="currentIndex" @switch="switchItem"></switches>
         <div class="list-wrapper">
-          <scroll class="list-scroll" v-if="currentIndex === 0" :data="playHistory">
+          <scroll ref="songList" class="list-scroll" v-if="currentIndex === 0" :data="playHistory">
             <div class="list-inner">
               <song-list :songs="playHistory" @select="selectSong"></song-list>
+            </div>
+          </scroll>
+          <scroll ref="searchList" class="list-scroll" v-if="currentIndex === 1" :data="searchHistory">
+            <div class="list-inner">
+              <search-list :searches="searchHistory" @delete="deleteSearchHistory" @select="addQuery"></search-list>
             </div>
           </scroll>
         </div>
@@ -35,6 +40,7 @@
   import Scroll from 'base/scroll/scroll'
   import {mapGetters, mapActions} from 'vuex'
   import SongList from 'base/song-list/song-list'
+  import SearchList from 'base/search-list/search-list'
   import Song from 'common/js/song'
 
   export default {
@@ -44,7 +50,8 @@
       Suggest,
       Switches,
       Scroll,
-      SongList
+      SongList,
+      SearchList
     },
     data () {
       return {
@@ -63,6 +70,14 @@
     methods: {
       show () {
         this.showFlag = true
+        // 组件show时 刷新组件
+        setTimeout(() => {
+          if (this.currentIndex === 0) {
+            this.$refs.songList.refresh()
+          } else {
+            this.$refs.searchList.refresh()
+          }
+        }, 20)
       },
       hide () {
         this.showFlag = false
