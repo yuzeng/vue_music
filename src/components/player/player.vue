@@ -61,7 +61,7 @@
               <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon-not-favorite"></i>
+              <i :class="favoriteIcon(currentSong)" @click="toggleFavorite(currentSong)"></i>
             </div>
           </div>
         </div>

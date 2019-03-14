@@ -2,7 +2,7 @@
 import * as types from './mutation-types'
 import {playMode} from 'common/js/config'
 import {shuffle} from 'common/js/util'
-import {saveSearch, deleteSearch, clearSearch, savePlay} from 'common/js/cache'
+import {saveSearch, deleteSearch, clearSearch, savePlay, savaFavorite, deleteFavorite} from 'common/js/cache'
 
 function findIndex (list, song) {
   return list.findIndex((item) => {
@@ -137,4 +137,14 @@ export const deleteSongList = function ({commit}) {
 
 export const savePlayHistroy = function ({commit}, song) {
   commit(types.SET_PLAY_HISTORY, savePlay(song))
+}
+
+// 喜欢的歌列表
+export const savaFavoriteList = function ({commit}, song) {
+  commit(types.SET_FAVORITE_LIST, savaFavorite(song))
+}
+
+// 删除喜欢的歌
+export const deleteFavoriteList = function ({commit}, song) {
+  commit(types.SET_FAVORITE_LIST, deleteFavorite(song))
 }
