@@ -87,7 +87,7 @@
       </div>
     </transition>
     <playlist ref="playlist"></playlist>
-    <audio ref="audio" :src="currentSong.url" @canplay="ready" @error="error" @timeupdate="updateTime"
+    <audio ref="audio" :src="currentSong.url" @play="ready" @error="error" @timeupdate="updateTime"
            @ended="end"></audio>
   </div>
 </template>
@@ -140,9 +140,10 @@
           this.currentLyric.stop()
         }
         // 解决手机微信浏览器 后台切前台无法执行JS，$nextTick换车setTimeou
-        setTimeout(() => {
-          this.$refs.audio.play()
-          this.getLyric()
+        clearTimeout(this.timer) // 保证只执行最后一次的setTimeout
+        this.timer = setTimeout(() => {
+          this.$refs.audio.play() // 同步方法
+          this.getLyric() // 异步方法
         }, 1000)
       },
       playing (playing) {
@@ -190,9 +191,12 @@
       // 获取歌词
       getLyric () {
         this.currentSong.getLyric().then((lyric) => {
+          // 防止快速切换歌词错位
+          if (this.currentSong.lyric !== lyric) {
+            return
+          }
           // 使用lyric-parser插件
           this.currentLyric = new Lyric(lyric, this.handleLyric)
-          console.log(this.currentLyric)
           if (this.playing) {
             this.currentLyric.play()
           }
@@ -258,7 +262,6 @@
         }
         // 拖动后 设置歌词位置
         if (this.currentLyric) {
-          console.log(this.$refs.audio.currentTime * 1000)
           this.currentLyric.seek(this.$refs.audio.currentTime * 1000)
         }
       },
@@ -287,6 +290,7 @@
         }
         if (this.playlist.length === 1) {
           this.loop()
+          return
         } else {
           let index = this.currentIndex + 1
           if (index === this.playlist.length) {
@@ -306,6 +310,7 @@
         }
         if (this.playlist.length === 1) {
           this.loop()
+          return
         } else {
           let index = this.currentIndex - 1
           if (index === -1) {
