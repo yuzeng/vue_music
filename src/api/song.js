@@ -1,9 +1,9 @@
 // import jsonp from '../common/js/jsonp'
-import {commonParams} from './config'
+import {commonParams,URLS} from './config'
 import axios from 'axios'
 
 export function getLyric (mid) {
-  const url = '/api/getLyric'
+  const url = URLS.getLyric
   const data = Object.assign({}, commonParams, {
     songmid: mid,
     pcachetime: +new Date(), // 等同于new Date().getTime();+new Date是简略写法，得到毫秒

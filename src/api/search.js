@@ -1,5 +1,5 @@
 import jsonp from '../common/js/jsonp'
-import {commonParams, options} from './config'
+import {commonParams, options,URLS} from './config'
 import axios from 'axios'
 
 // 热门搜索
@@ -16,7 +16,7 @@ export function getHotKey () {
 
 // 搜索
 export function search (query, page, zhida, perpage) {
-  const url = '/api/search'
+  const url = URLS.search
   const data = Object.assign({}, commonParams, {
     g_tk: 8818375,
     w: query,

@@ -1,9 +1,9 @@
 // import jsonp from 'common/js/jsonp'
-import {commonParams} from './config'
+import {commonParams,URLS} from './config'
 import axios from 'axios'
 
 export function getMusic (mid) {
-  const url = '/api/getMusic'
+  const url = URLS.getMusic
   // const url = 'https://u.y.qq.com/cgi-bin/musicu.fcg'
 
   const data = Object.assign({}, commonParams, {
